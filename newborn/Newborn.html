@@ -1,0 +1,200 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Newborn beta</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var config = {
+    type: Phaser.AUTO,
+    width: 1280,
+    height: 720,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 315},
+            debug: false
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
+    
+var player;
+var cross;
+var cursors;
+var colectedcross = 0;
+var score =0;
+var scoretext;
+var colectcross;
+
+var game = new Phaser.Game(config);
+    
+function preload ()
+{
+    this.load.image("background", 'assets/fondo.png');
+    this.load.image('platformizq', 'assets/plataforma-izq.png');
+    this.load.image('platformder', 'assets/plataforma-der.png');
+    this.load.image('platformspecial', 'assets/plataforma-cruz-especial.png');
+    this.load.image('ground', 'assets/suelo.png');
+    this.load.image('cross', 'assets/cruz-normal.png');
+    this.load.image('specialcross', 'assets/cruz-especial.png');
+    this.load.image('fire', 'assets/fuego.png');
+    this.load.image('scoreboard', 'assets/puntaje.png');
+    this.load.spritesheet('dude', 'assets/dude.png', {frameWidth: 32, frameHeight: 48});
+    this.load.image('piso', 'assets/piso.png');
+    this.load.image('pisochikito',  'assets/pisochikito.png');
+    this.load.image('scoreboard', 'assets/puntaje.png');
+}
+    
+function create ()
+{
+    this.add.image(640, 360, "background");
+            
+    platforms = this.physics.add.staticGroup();
+    piso = this.physics.add.staticGroup();
+
+    platforms.create(640, 620, 'ground');
+
+    platforms.create(195, 375, 'platformizq');
+    platforms.create(990, 200, 'platformder');
+    platforms.create(800, 400, 'platformspecial');
+    platforms.create(1100, 450, 'platformspecial').setFlipX(true);
+    platforms.create(550, 200, 'platformspecial').setFlipX(true);
+    platforms.create(100, 200, 'platformspecial');
+    platforms.create(450, 420, 'platformspecial').setFlipX(true);
+
+    piso.create(625, 550, 'piso');
+    piso.create(50, 670, 'piso');
+    piso.create(1205, 640, 'piso');
+    piso.create(190, 330, 'piso');
+    piso.create(910, 125, 'piso');
+    piso.create(1150, 125, 'piso');
+    piso.create(805,380, 'pisochikito');
+    piso.create(1100,425, 'pisochikito');
+    piso.create(550,180, 'pisochikito');
+    piso.create(105,180, 'pisochikito');
+    piso.create(445,398, 'pisochikito');
+
+    player = this.physics.add.sprite(50, 590, 'dude')
+
+    player.setCollideWorldBounds(true);
+
+    this.anims.create({
+        key: 'left',
+        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'turn',
+        frames: [ { key: 'dude', frame: 4 } ],
+        frameRate: 20
+    });
+
+    this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    cross = this.physics.add.group();
+
+    cross.create(100, 270, 'cross');
+    cross.create(300, 270, 'cross');
+    cross.create(640, 500, 'cross');
+    cross.create(1050, 600, 'cross');
+    cross.create(800, 65, 'cross');
+    cross.create(1100, 65, 'cross');
+
+    specialcross = this.physics.add.group();
+
+    specialcross.create(110, 110, 'specialcross');
+    specialcross.create(560, 110, 'specialcross');
+    specialcross.create(460, 360, 'specialcross');
+    specialcross.create(800, 340, 'specialcross');
+    specialcross.create(1110, 370, 'specialcross');
+
+    scoreboard = this.physics.add.staticGroup();
+
+    scoreboard.create(20, 5, 'scoreboard');
+
+    scoretext = this.add.text(25, 35, '  ', { fontSize: '34px', fill: '#FFFF00', outline: '#000000'});
+
+    colectcross = this.add.text(25, 05, ' ', {fontSize: '34px', fill: '#FFFF00', outline: '#000000'});
+
+    cursors = this.input.keyboard.createCursorKeys();
+
+    this.physics.add.collider(player, piso);
+    this.physics.add.collider(cross, piso);
+    this.physics.add.collider(specialcross, piso);
+
+    this.physics.add.overlap(player, cross, collectcross, null, this)
+
+    this.physics.add.overlap(player, specialcross, collectspecialcross, null, this)
+
+
+}
+    
+function update ()
+{
+    if (cursors.left.isDown)
+    {
+        player.setVelocityX(-160);
+
+        player.anims.play('left', true);
+    }
+    else if (cursors.right.isDown)
+    {
+        player.setVelocityX(160);
+
+        player.anims.play('right', true);
+    }
+    else
+    {
+        player.setVelocityX(0);
+
+        player.anims.play('turn');
+    }
+
+    if (cursors.up.isDown && player.body.touching.down)
+    {
+        player.setVelocityY(-330);
+    }
+}
+
+function collectcross (player, cross)
+{
+        cross.disableBody(true, true);
+
+        colectedcross += 10;
+        colectcross.setText(' ' + colectedcross);
+
+}
+
+function collectspecialcross (player, specialcross)
+{
+        specialcross.disableBody(true, true)
+
+        colectedcross += 15;
+        colectcross.setText(' ' + colectedcross)
+}    
+
+</script>
+    
+</body>
+</html>
